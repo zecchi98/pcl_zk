@@ -1,0 +1,10 @@
+<?xml version="1.0"?>
+<launch>
+  <node launch-prefix="" name="greedy_projection" pkg="pcl_zk" type="greedy_projection" output="screen">
+  </node>
+  <node launch-prefix="" name="correct_ply" pkg="pcl_zk" type="correct_ply.py" output="screen">
+  </node>
+  <node launch-prefix="" name="publish_marker" pkg="pcl_zk" type="publish_marker.py" output="screen">
+  </node>
+  <include file="$(find pcl_zk)/launch/plane_slicer_rastering_generator_demo.launch"/>
+</launch>
