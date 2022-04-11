@@ -20,7 +20,8 @@
 #include <pcl/filters/voxel_grid.h>
 #include <ros/package.h>
 #include <pcl/visualization/cloud_viewer.h>
-
+#include <iostream>
+using namespace std;
 //ctmviewer
 bool fine=false;
 bool bool_need=false;
@@ -144,7 +145,7 @@ void from_file_to_stl(){
   // Load input file into a PointCloud<T> with an appropriate type
   pcl::PointCloud<pcl::PointXYZ>::Ptr cloud (new pcl::PointCloud<pcl::PointXYZ>);
   pcl::PCLPointCloud2 cloud_blob;
-  pcl::io::loadPCDFile ("bun0.pcd", cloud_blob);
+  pcl::io::loadPCDFile ("my_cloud.pcd", cloud_blob);
   pcl::fromPCLPointCloud2 (cloud_blob, *cloud);
   //* the data should be available in cloud
 
@@ -196,6 +197,107 @@ void from_file_to_stl(){
   
 }
 
+void from_my_manual_points_to_pointcloud(){
+
+
+std::cout << "\n\n" << "starting program" << "\n\n";
+
+  pcl::PointCloud<pcl::PointXYZ>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZ>);      // !!! with ::Ptr !!!
+
+  int numPoints = 1000;
+
+  for (int i = 0; i < numPoints; i++)
+  {
+    pcl::PointXYZ point;
+
+    point.x = 1024 * rand () / (RAND_MAX + 1.0f);
+    point.y = 1024 * rand () / (RAND_MAX + 1.0f);
+    point.z = 1024 * rand () / (RAND_MAX + 1.0f);
+
+    cloud->points.push_back(point);
+  }
+
+  // for simplicity, use an "unorganized" cloud, "width" = num points, "height" = 1
+  cloud->width = (int)cloud->points.size();
+  cloud->height = 1;
+  cloud->is_dense=false;
+
+  pcl::io::savePCDFileASCII("my_cloud.pcd", *cloud);
+
+  std::cout << "\n\n" << "program complete" << "\n\n";
+
+
+
+
+
+  // Normal estimation*
+  pcl::NormalEstimation<pcl::PointXYZ, pcl::Normal> n;
+  pcl::PointCloud<pcl::Normal>::Ptr normals (new pcl::PointCloud<pcl::Normal>);
+  pcl::search::KdTree<pcl::PointXYZ>::Ptr tree (new pcl::search::KdTree<pcl::PointXYZ>);
+  tree->setInputCloud (cloud);
+  n.setInputCloud (cloud);
+  n.setSearchMethod (tree);
+  n.setKSearch (20);
+  n.compute (*normals);
+
+  //* normals should not contain the point normals + surface curvatures
+
+  // Concatenate the XYZ and normal fields*
+  pcl::PointCloud<pcl::PointNormal>::Ptr cloud_with_normals (new pcl::PointCloud<pcl::PointNormal>);
+  pcl::PointCloud<pcl::PointXYZRGBA>::Ptr cloud_xyz (new pcl::PointCloud<pcl::PointXYZRGBA>);
+  pcl::concatenateFields (*cloud, *normals, *cloud_with_normals);
+  
+  
+
+
+
+
+
+  //* cloud_with_normals = cloud + normals
+  // Create search tree*
+  pcl::search::KdTree<pcl::PointNormal>::Ptr tree2 (new pcl::search::KdTree<pcl::PointNormal>);
+  tree2->setInputCloud (cloud_with_normals);
+
+  // Initialize objects
+  pcl::GreedyProjectionTriangulation<pcl::PointNormal> gp3;
+  pcl::PolygonMesh triangles;
+
+  // Set the maximum distance between connected points (maximum edge length)
+  gp3.setSearchRadius (0.025);
+
+  // Set typical values for the parameters
+  gp3.setMu (2.5);
+  gp3.setMaximumNearestNeighbors (150);
+  gp3.setMaximumSurfaceAngle(M_PI/4); // 45 degrees
+  gp3.setMinimumAngle(M_PI/18); // 10 degrees
+  gp3.setMaximumAngle(2*M_PI/3); // 120 degrees
+  gp3.setNormalConsistency(false);
+
+  // Get result
+  gp3.setInputCloud (cloud_with_normals);
+  gp3.setSearchMethod (tree2);
+  gp3.reconstruct (triangles);
+
+  // Additional vertex information
+  std::vector<int> parts = gp3.getPartIDs();
+  std::vector<int> states = gp3.getPointStates();
+
+  ROS_INFO("Saving the file");
+  //pcl::io::savePolygonFilePLY("mesh.ply", triangles);
+  std::string path = ros::package::getPath("pcl_zk");
+  //path=path+"/data";
+  std::string nome="/data/manual_mesh.stl";
+  std::string path2=path+"/data/manual_mesh.vtk";
+  path=path+nome;
+  std::string path1=path+"1";
+  pcl::io::savePolygonFileSTL(path1, triangles);
+  pcl::io::saveVTKFile(path2, triangles);
+  ros::param::set("need_to_transform",true);
+  ROS_INFO("FINISH TO SAVE MESH");
+
+  
+}
+
 void view_cloud(const pcl::PointCloud<pcl::PointXYZRGBA>::Ptr ptrcloud)
 {
   ROS_INFO("Printing cloud");
@@ -217,13 +319,23 @@ int main(int argc, char **argv)
   ros::Subscriber sub = nh.subscribe ("/camera/depth/points", 1, cloud_cb);
 
   ros::param::set("/need_to_hadle_cloud",false);
+  
+  ROS_INFO("DO you want create a pcd o convert to an stl?\n 1)stl \n 2)pcd");
+  int scelta;
+  cin>>scelta;
+  if (scelta==1)
+    from_file_to_stl();
+  if(scelta==2)
+    from_my_manual_points_to_pointcloud();
 
+  /*
   // Spin
   do{
   ros::param::get("/need_to_hadle_cloud",bool_need);
   ros::spinOnce();
-  ROS_INFO("CLOSING");
   }while(!fine);
+  */
+
   ROS_INFO("CLOSING");
   return 0;
 }
