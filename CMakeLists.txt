@@ -28,12 +28,19 @@ roslib
 
 actionlib
 cmake_modules
+mesh_segmenter
+noether_conversions  
+noether_msgs
+path_sequence_planner
 pcl_conversions
+pcl_ros
 roslib
+tool_path_planner
 
 )
 
 
+find_package(vtk_viewer REQUIRED)
 catkin_package(
     INCLUDE_DIRS
       include
@@ -59,9 +66,12 @@ catkin_package(
         ${PCL_INCLUDE_DIRS}
       )
 
+add_executable(plane_slicer_example_node  src/plane_slicer_raster_generator_node.cpp)
+target_link_libraries(plane_slicer_example_node ${catkin_LIBRARIES} noether::vtk_viewer)
+list (APPEND PACKAGE_TARGETS plane_slicer_example_node)
 
 add_executable(greedy_projection  src/greedy_projection.cpp)
-target_link_libraries(greedy_projection ${catkin_LIBRARIES} ${PCL_LIBRARIES} )
+target_link_libraries(greedy_projection ${catkin_LIBRARIES} ${PCL_LIBRARIES} noether::vtk_viewer)
 list (APPEND PACKAGE_TARGETS greedy_projection)
 
 catkin_install_python(PROGRAMS

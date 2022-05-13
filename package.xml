@@ -61,7 +61,6 @@
   <depend>pcl_conversions</depend>
   
   <depend>tool_path_planner</depend>
-  <depend>vtk_viewer</depend>
 
   <build_depend>roslib</build_depend> <exec_depend>roslib</exec_depend>
 

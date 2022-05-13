@@ -14,18 +14,8 @@ import rospkg
 from pytest import Mark, mark
 
 import geometry_msgs.msg
-import moveit_commander
-import moveit_msgs.msg
 import numpy as np
 import rospy
-from moveit_commander import *
-from moveit_commander.conversions import pose_to_list
-from moveit_commander.move_group import MoveGroupCommander
-from moveit_commander.robot import RobotCommander
-from std_msgs.msg import String
-from tf.transformations import euler_from_quaternion, quaternion_from_euler
-from ur10_control.srv import * 
-from ur10_control.msg import *
 from noether_msgs.msg import *
 from visualization_msgs.msg import *
 import open3d as o3d
@@ -64,7 +54,7 @@ def main():
   rospy.init_node('correct_ply', anonymous=True)
   rospy.set_param("/need_to_transform",False)
   try:
-    while (not rospy.core.is_shutdown()) and (not bool_exit):
+    while (not rospy.core.is_shutdown()):
 
 
         bool_transform=rospy.get_param("/need_to_transform")

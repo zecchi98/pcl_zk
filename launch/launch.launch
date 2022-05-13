@@ -1,5 +1,8 @@
 <?xml version="1.0"?>
 <launch>
+      <arg name="need_to_hadle_cloud" default="True" />  
+      <param name="need_to_hadle_cloud" type="bool" value="$(arg need_to_hadle_cloud)"/>
+
   <node launch-prefix="" name="greedy_projection" pkg="pcl_zk" type="greedy_projection" output="screen">
   </node>
   <node launch-prefix="" name="correct_ply" pkg="pcl_zk" type="correct_ply.py" output="screen">
