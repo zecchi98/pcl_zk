@@ -41,40 +41,22 @@ void cloud_cb(const sensor_msgs::PointCloud2ConstPtr& cloud_msg)
   if(bool_need==false)
     return ;
   fine=true;
-
-
-  //Changing reference frame
-  sensor_msgs::PointCloud2* cloud_msg_converted;
-  
-
-  pcl_ros::transformPointCloud("/base_link",*cloud_msg, *cloud_msg_converted, *listener);
   // Container for original & filtered data
   ROS_INFO("Message received");
   pcl::PointCloud<pcl::PointXYZ>::Ptr cloud (new pcl::PointCloud<pcl::PointXYZ>);
-
-
   pcl::PCLPointCloud2* cloud_blob = new pcl::PCLPointCloud2; 
-
-
-
-  // Convert to PCL data type
-  pcl_conversions::toPCL(*cloud_msg_converted, *cloud_blob);
-
-
-
   pcl::PCLPointCloud2ConstPtr cloudPtr(cloud_blob);
   pcl::PCLPointCloud2 cloud_filtered;
 
 
+  // Convert to PCL data type
+  pcl_conversions::toPCL(*cloud_msg, *cloud_blob);
 
   ROS_INFO("from msg to cloud2");
 
   pcl::fromPCLPointCloud2 (*cloud_blob, *cloud);
 
   ROS_INFO("from cloud2 to cloud");
-  
-
-    
 
   // Normal estimation*
   pcl::NormalEstimation<pcl::PointXYZ, pcl::Normal> n;
@@ -474,6 +456,7 @@ int main(int argc, char **argv)
   // Create a ROS subscriber for the input point cloud
   ros::Subscriber sub = nh.subscribe ("/camera/depth/points", 1, cloud_cb);
 
+/*
   tf::StampedTransform transform;
   sleep(1);
   //listener.waitForTransform("/base", "/cameradepth_link", t, ros::Duration(4.0));
@@ -484,6 +467,10 @@ int main(int argc, char **argv)
       ROS_ERROR("%s",ex.what());
       ros::Duration(1.0).sleep();
     }
+
+
+
+  */
   ROS_INFO("PRONTO");
 
   ros::param::set("/need_to_hadle_cloud",false);
